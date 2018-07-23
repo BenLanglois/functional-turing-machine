@@ -1,0 +1,35 @@
+# Determines if two bits (positions 0 and 1) are equal
+
+@main () l1_flag
+    # Load the first bit
+    l1_flag * !flag (bit1) l1
+    l1 * 1 > l2_flag
+
+    # Load the second bit
+    l2_flag * !flag (bit2) l2
+    l2 * 1 > out_flag
+
+    # Set the output flag and call the equal function
+    out_flag * !flag (output) compare
+
+    # Call the equal function
+    compare * !equal (bit1, bit2, output) end
+
+@equal (first, second, output) goto_first
+    goto_first * !goto (first) check_first
+
+    # check the value of the first bit
+    check_first 0 !goto (second) check_second_0
+    check_first 1 !goto (second) check_second_1
+
+    # The first bit was 0
+    check_second_0 0 !goto (output) return_1
+    check_second_0 1 !goto (output) return_0
+
+    # The first bit was 1
+    check_second_1 0 !goto (output) return_0
+    check_second_1 1 !goto (output) return_1
+
+    # Return value
+    return_0 * 0 * end
+    return_1 * 1 * end

@@ -31,7 +31,7 @@ class TuringTape:
         if fill != '*':
             # Change all cells that the tape moves over to the fill value
             for i in range(self.get_position() + 1, self.get_position() + count + 1):
-                self._tape[i] = fill
+                self._tape[i] = int(fill)
 
         # Move the cursor
         self._position += count
@@ -44,14 +44,23 @@ class TuringTape:
         if fill != '*':
             # Change all cells that the tape moves over to the fill value
             for i in range(self.get_position() - count, self.get_position()):
-                self._tape[i] = fill
+                self._tape[i] = int(fill)
 
         # Move the cursor
         self._position -= count
 
     def get_position(self):
+        "Returns the position of the tape."
         return self._position
 
+    def set_position(self, new_pos):
+        "Sets the position of the tape."
+        if 0 <= new_pos < len(self._tape):
+            self._position = new_pos
+        else:
+            raise IndexError("Index out of range of tape.")
+
+    '''
     def set_flag(self, flag_name):
         self._flags[flag_name] = self.get_position()
 
@@ -60,6 +69,7 @@ class TuringTape:
             self._position = self._flags[flag_name]
         else:
             raise KeyError("Invalid flag name.")
+    '''
 
     def __repr__(self):
         "A list-like representation of the tape, where the cursor looks like: '>X<'"
@@ -69,7 +79,8 @@ class TuringTape:
 			' '.join(str(cell) for cell in self._tape[self.get_position() + 1:]) +
 			(']' if self.get_position() + 1 == len(self._tape) else ' ]'))
 
-def assert_valid_variable_name(name, allow_asterisk, line_num):
+r'''
+def assert_valid_variable_name(name, line_num, allow_asterisk=False):
     if allow_asterisk and name == '*':
         return '*'
     elif isinstance(name, str) and name != "" and name[0].isalpha():
@@ -107,11 +118,10 @@ def assert_valid_function_name(fnc, line_num):
         return fnc
     else:
         raise ValueError(f"Invalid function name on line {line_num}.")
-
+'''
 
 
 if __name__ == "__main__":
-
     # Get command line arguments
     command_line_args = sys.argv
 
@@ -120,124 +130,203 @@ if __name__ == "__main__":
         input_file_name = command_line_args[1]
     elif len(command_line_args) == 1:
         input_file_name = input("Enter input file name: ")
+    else:
+        raise ValueError("Incorrect number of command line arguments.")
+
 
     # Read file
     with open(input_file_name) as input_file:
         script = input_file.readlines()
 
     # Compile the script
-    expressions = {}
-    _valid_functions = ["!flag", "!goto"]
+    functions = {}
+    curr_function = None
+    empty_line_pattern = re.compile(r"^\s*(?:#.*)?$")
+    new_func_pattern = re.compile(r"^\s*@(?P<name>[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*[a-zA-Z_]\w*\s*(?:,\s*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s*(?P<initial_state>[a-zA-Z_]\w*)\s*(?:#.*)?$")
+    exec_func_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!(?P<function>[a-zA-Z_]\w*)\s+\((?P<parameters>(?:\s*[a-zA-Z_]\w*\s*(?:,\s*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s+(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
+    # move_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+(?P<final_value>[01\*])\s+(?:(?P<operation>[<>])(?P<count>[1-9][0-9]*)?(?::(?P<fill>[01\*]))?|(?:\*))\s+(?P<final_state>[a-zA-Z_]\w*)\s*(?:#.*)?$")
+    move_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+(?P<final_value>[01\*])\s+(?P<operation>[<>\*])(?:(?<!\*)(?P<count>[1-9][0-9]*)?(?::(?P<fill>[01\*]))?)?\s+(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
 
     for line_num, line in enumerate(script):
         # Use a 1-indexed line number
         line_num += 1
 
-        if '#' in line:
-            # The line has a comment on it
-            line = line[:line.index('#')]
+        empty_line_match = empty_line_pattern.match(line)
+        if empty_line_match is not None:
+            # Empty line
+            continue
 
-        # Remove whitespace
-        line = line.strip()
+        new_func_match = new_func_pattern.match(line)
+        if new_func_match is not None:
+            # Start of new function
 
-        if len(line) > 0:
-            # Validate the expression and add it to a dictionary
-            args = line.split()
+            # Get expression information
+            name = new_func_match.group("name")
 
-            if len(args) != 5:
-                # Wrong number of arguments in expression
-                raise ValueError(f"Invalid expression on line {line_num}.")
+            if name in functions.keys():
+                # Duplicate function name
+                raise ValueError(f"Repeated function name on line {line_num}.")
 
-            elif len(args) == 5 and args[2][0] == "!":
-                # Expression calls a function
-                initial_state = assert_valid_variable_name(args[0], False, line_num)
-                initial_value = assert_valid_value(args[1], line_num)
-                function = assert_valid_function_name(args[2], line_num)
-                flag_name = assert_valid_variable_name(args[3], False, line_num)
-                final_state = assert_valid_variable_name(args[4], True, line_num)
+            curr_function = name
+            initial_state = new_func_match.group("initial_state")
 
-                if (initial_state, initial_value) in expressions:
-                    # Repeated expression
-                    raise ValueError(f"Repeated expression on line {line_num}.")
+            # Create new function
+            functions[name] = {"parameters": [], "initial_state": initial_state, "expressions": {}}
 
-                if final_state in (initial_state, '*'):
-                    # Infinite loop
-                    raise ValueError(f"Infinite loop detected on line {line_num}.")
+            # Get parameters
+            parameter_string = new_func_match.group("parameters")
+            for p in parameter_string.split(','):
+                if p.strip() != '':
+                    functions[name]["parameters"].append(p.strip())
 
-                # Add expression
-                expressions[(initial_state, initial_value)] = {"is_function": True, "function": function, "flag_name": flag_name, "final_state": final_state}
+            # Main function cannot take any parameters
+            if name == "main" and len(functions[name]["parameters"]) != 0:
+                raise ValueError(f"Main function on line {line_num} must not take any parameters.")
 
-            else:
-                # Expression does not call a function
-                initial_state = assert_valid_variable_name(args[0], False, line_num)
-                initial_value = assert_valid_value(args[1], line_num)
-                final_value = assert_valid_value(args[2], line_num)
-                move = assert_valid_move(args[3], line_num)
-                final_state = assert_valid_variable_name(args[4], True, line_num)
+            continue
 
-                if (initial_state, initial_value) in expressions:
-                    # Repeated expression
-                    raise ValueError(f"Repeated expression on line {line_num}.")
+        if curr_function is None:
+            # Expression is not inside of a function
+            raise ValueError(f"Expression on line {line_num} is not inside a function.")
 
-                if move == '*' and final_state in ('*', initial_state) and ('*' in (initial_value, final_value) or final_value == initial_value):
-                    # Infinite loop
-                    raise ValueError(f"Infinite loop detected on line {line_num}.")
+        exec_func_match = exec_func_pattern.match(line)
+        if exec_func_match is not None:
+            # Expression calls a function
+            initial_state = exec_func_match.group("initial_state")
+            initial_value = exec_func_match.group("initial_value")
 
-                # Add expression
-                expressions[(initial_state, initial_value)] = {"is_function": False, "final_value": final_value, "move": move, "final_state": final_state}
+            if (initial_state, initial_value) in functions[curr_function]["expressions"].keys():
+                # Repeated expression
+                raise ValueError(f"Repeated expression on line {line_num}.")
 
+            function = exec_func_match.group("function")
+            parameters = []
+            for p in exec_func_match.group("parameters").split(','):
+                parameters.append(p.strip())
+
+            final_state = exec_func_match.group("final_state")
+
+            if function in ("goto", "flag") and final_state in (initial_state, '*'):
+                # Infinite loop
+                raise ValueError(f"Infinite loop detected on line {line_num}.")
+
+            # Add expression
+            functions[curr_function]["expressions"][(initial_state, initial_value)] = \
+                {"is_function": True, "function": function, "parameters": parameters, "final_state": final_state}
+
+            continue
+
+        move_match = move_pattern.match(line)
+        if move_match is not None:
+            # Expression does not call a function
+            initial_state = move_match.group("initial_state")
+            initial_value = move_match.group("initial_value")
+
+            if (initial_state, initial_value) in functions[curr_function]["expressions"].keys():
+                # Repeated expression
+                raise ValueError(f"Repeated expression on line {line_num}.")
+
+            final_value = move_match.group("final_value")
+            operation = move_match.group("operation")
+            count = move_match.group("count") or '1'
+            fill = move_match.group("fill") or '*'
+            final_state = move_match.group("final_state")
+
+            if operation == '*' and final_state in ('*', initial_state) and ('*' in (initial_value, final_value) or final_value == initial_value):
+                # Infinite loop
+                raise ValueError(f"Infinite loop detected on line {line_num}.")
+
+            # Add expression
+            functions[curr_function]["expressions"][(initial_state, initial_value)] = \
+                {"is_function": False, "final_value": final_value, "operation": operation, "count": count, "fill": fill, "final_state": final_state}
+
+            continue
+
+        # Invalid expression
+        raise ValueError(f"Invalid expression on line {line_num}.")
+
+    if "main" not in functions.keys():
+        raise ValueError("No main function specified.")
+
+    '''
+    for name in functions:
+        print(f"name: {name}, initial_state: {functions[name]['initial_state']}")
+        for key in functions[name]["expressions"]:
+            print(f"{key}: {functions[name]['expressions'][key]}")
+        print()
+    '''
 
     # print(''.join(script))
-    # print('\n'.join(f"{key} -> {expressions[key]}" for key in expressions) + '\n')
 
     # Initialize the tape
     tape = TuringTape()
-    curr_state = "start"
-    print(tape)
+    stack = [{"name": "main", "flags": {}, "state": functions["main"]["initial_state"]}]
 
     # Run the program
     while True:
+        # print(f"{tape}    function: {stack[-1]['name']}    state: {stack[-1]['state']}")
+        print(tape)
+
         # Get the current command
         try:
-            cmd = expressions[(curr_state, '*')]
+            cmd = functions[stack[-1]["name"]]["expressions"][(stack[-1]["state"], '*')]
         except KeyError:
             try:
-                cmd = expressions[(curr_state, tape.selected)]
+                cmd = functions[stack[-1]["name"]]["expressions"][(stack[-1]["state"], tape.selected)]
             except KeyError:
-                break
+                # Remove top layer from the stack
+                del stack[-1]
+                if len(stack) == 0:
+                    break
+                else:
+                    continue
+
 
         if cmd["is_function"]:
             # Execute function
-            if cmd["function"] == "!flag":
-                tape.set_flag(cmd["flag_name"])
-            elif cmd["function"] == "!goto":
-                try:
-                    tape.goto_flag(cmd["flag_name"])
-                except KeyError:
-                    raise ValueError(f"Flag name {cmd['flag_name']} referenced before initialization.")
-            else:
-                # This should never be reachable, but is here for extra safety
-                raise ValueError(f"Invalid function {cmd['function']}")
+            if cmd["function"] == "flag":
+                if len(cmd["parameters"]) != 1:
+                    raise IndexError("Incorrect number of parameters for function !flag.")
+                stack[-1]["flags"][cmd["parameters"][0]] = tape.get_position()
+                stack[-1]["state"] = cmd["final_state"]
 
-            if cmd["final_state"] != '*':
-                curr_state = cmd["final_state"]
+            elif cmd["function"] == "goto":
+                if len(cmd["parameters"]) != 1:
+                    raise IndexError("Incorrect number of parameters for function !goto.")
+                try:
+                    tape.set_position(stack[-1]["flags"][cmd["parameters"][0]])
+                except KeyError:
+                    raise KeyError(f"Flag name {cmd['parameters'][0]} referenced before creation.")
+                stack[-1]["state"] = cmd["final_state"]
+            else:
+                # Custom function
+                if cmd["function"] not in functions.keys():
+                    raise ValueError(f"Invalid function {cmd['function']}.")
+                elif len(cmd["parameters"]) != len(functions[cmd["function"]]["parameters"]):
+                    raise IndexError(f"Incorrect number of parameters for function !{cmd['function']}.")
+
+                if cmd["final_state"] != '*':
+                    stack[-1]["state"] = cmd["final_state"]
+
+                # Add new layer to stack
+                flags = {}
+                for i in range(len(cmd["parameters"])):
+                    try:
+                        flags[functions[cmd["function"]]["parameters"][i]] = stack[-1]["flags"][cmd["parameters"][i]]
+                    except KeyError:
+                        raise KeyError(f"Flag name {cmd['parameters'][i]} referenced before creation.")
+
+                stack.append({"name": cmd["function"], "flags": flags, "state": functions[cmd["function"]]["initial_state"]})
 
         else:
             # Set the selected value
             if cmd["final_value"] != '*':
                 tape.selected = cmd["final_value"]
 
-            move = cmd["move"]
-            if move[0] in ['>', '<']:
-                colon = move.index(':')
-                count = int(move[1:colon])
-                fill = '*' if move[colon+1] == '*' else int(move[move.index(':')+1:])
-                if move[0] == '>':
-                    tape.right(count, fill)
-                else:
-                    tape.left(count, fill)
+            if cmd["operation"] == '<':
+                tape.left(int(cmd["count"]), cmd["fill"])
+            elif cmd["operation"] == '>':
+                tape.right(int(cmd["count"]), cmd["fill"])
 
             if cmd["final_state"] != '*':
-                curr_state = cmd["final_state"]
-
-        print(tape)
+                stack[-1]["state"] = cmd["final_state"]
