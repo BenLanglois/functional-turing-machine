@@ -79,48 +79,6 @@ class TuringTape:
 			' '.join(str(cell) for cell in self._tape[self.get_position() + 1:]) +
 			(']' if self.get_position() + 1 == len(self._tape) else ' ]'))
 
-r'''
-def assert_valid_variable_name(name, line_num, allow_asterisk=False):
-    if allow_asterisk and name == '*':
-        return '*'
-    elif isinstance(name, str) and name != "" and name[0].isalpha():
-        for char in name[1:]:
-            if not (char.isalnum() or char == '_'):
-                ValueError(f"Invalid variable name on line {line_num}.")
-        return name
-    else:
-        raise ValueError(f"Invalid variable name on line {line_num}.")
-
-def assert_valid_value(val, line_num):
-    if val in ['0', '1']:
-        return int(val)
-    elif val == '*':
-        return val
-    else:
-        raise ValueError(f"Invalid cell value on line {line_num}.")
-
-def assert_valid_move(mv, line_num):
-    if mv == '*':
-        return mv
-    else:
-        move_pattern = re.compile(r"(?P<operation>[<>])(?P<count>[1-9][0-9]*)?(?P<fill>:[01\*])?$")
-        match = move_pattern.match(mv)
-        if match is not None:
-            operation = match.group('operation')
-            count = match.group('count') or '1'
-            fill = match.group('fill') or ':*'
-            return operation + count + fill
-        else:
-            raise ValueError(f"Invalid move on line {line_num}.")
-
-def assert_valid_function_name(fnc, line_num):
-    if fnc in _valid_functions:
-        return fnc
-    else:
-        raise ValueError(f"Invalid function name on line {line_num}.")
-'''
-
-
 if __name__ == "__main__":
     # Get command line arguments
     command_line_args = sys.argv
@@ -148,8 +106,7 @@ if __name__ == "__main__":
     curr_function = None
     empty_line_pattern = re.compile(r"^\s*(?:#.*)?$")
     new_func_pattern = re.compile(r"^\s*@(?P<name>[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*[a-zA-Z_]\w*\s*(?:,\s*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s*(?P<initial_state>[a-zA-Z_]\w*)\s*(?:#.*)?$")
-    exec_func_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!(?P<function>[a-zA-Z_]\w*)\s+\((?P<parameters>(?:\s*[a-zA-Z_]\w*\s*(?:,\s*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s+(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
-    # move_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+(?P<final_value>[01\*])\s+(?:(?P<operation>[<>])(?P<count>[1-9][0-9]*)?(?::(?P<fill>[01\*]))?|(?:\*))\s+(?P<final_state>[a-zA-Z_]\w*)\s*(?:#.*)?$")
+    exec_func_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!(?P<function>[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*[a-zA-Z_]\w*\s*(?:,\s*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s+(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
     move_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+(?P<final_value>[01\*])\s+(?P<operation>[<>\*])(?:(?<!\*)(?P<count>[1-9][0-9]*)?(?::(?P<fill>[01\*]))?)?\s+(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
 
     for line_num, line in enumerate(script):
@@ -253,23 +210,12 @@ if __name__ == "__main__":
     if "main" not in functions.keys():
         raise ValueError("No main function specified.")
 
-    '''
-    for name in functions:
-        print(f"name: {name}, initial_state: {functions[name]['initial_state']}")
-        for key in functions[name]["expressions"]:
-            print(f"{key}: {functions[name]['expressions'][key]}")
-        print()
-    '''
-
-    # print(''.join(script))
-
     # Initialize the tape
     tape = TuringTape()
     stack = [{"name": "main", "flags": {}, "state": functions["main"]["initial_state"]}]
 
     # Run the program
     while True:
-        # print(f"{tape}    function: {stack[-1]['name']}    state: {stack[-1]['state']}")
         print(tape)
 
         # Get the current command
