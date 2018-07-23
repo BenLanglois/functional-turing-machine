@@ -133,6 +133,11 @@ if __name__ == "__main__":
     else:
         raise ValueError("Incorrect number of command line arguments.")
 
+    file_name_pattern = re.compile(r"^\w+\.ftm$")
+
+    if file_name_pattern.match(input_file_name) is None:
+        raise NameError('Invalid file name. Functional Turing Machine files must end with ".ftm"')
+
 
     # Read file
     with open(input_file_name) as input_file:
