@@ -1,26 +1,130 @@
-@main () set_first_flag
-    set_first_flag * !flag (bit_1) load_first
-    load_first * 1 > set_second_flag
+@main() set_start1
+    # Get user input and set flags for adding
 
-    set_second_flag * !flag (bit_2) load_second
-    load_second * 1 > set_return_flag
+    # Set n1 flags
+    set_start1 * !flag(start1) get_1
+    get_1 * !input(1, 8, "Enter first number (1-8 bits):") set_end1
+    set_end1 * !flag(end1) get_2
 
-    set_return_flag * !flag (start_out) run_add
-    run_add * !add_1 (bit_1, bit_2, start_out) end
+    # Set n2 flags (Note: start2 == end1)
+    get_2 * !input(1, 8, "Enter second number (1-8 bits):") set_end2
+    set_end2 * !flag(end2) goto_sum_end
+
+    # Set sum flags
+    goto_sum_end * * >9 set_sum_end
+    set_sum_end * !flag(sum_end) exec_add
+
+    # Execute the !add function
+    exec_add * !add(start1, end1, end1, end2, sum_end) print_text
+
+    # Print the result to the screen
+    print_text * !print_str("The sum of the two numbers you entered is:") print_sum
+    print_sum * !print_bit(end2, sum_end) return
 
 
-@add_1 (bit_1, bit_2, start_out) goto_1
-    goto_1 * !goto (bit_1) check_1
 
-    check_1 0 !goto (bit_2) check_2_0
-    check_1 1 !goto (bit_2) check_2_1
+@add(n1_start, n1_end, n2_start, n2_end, sum_end) goto_n1_end_flag
 
-    check_2_0 0 !goto (start_out) write_0
-    check_2_0 1 !goto (start_out) write_1
+# !add adds two numbers, n1 and n2, and stores the result in sum. n1 and n2 will not be modified
 
-    check_2_1 0 !goto (start_out) write_1
-    check_2_1 1 !goto (start_out) write_2
+# Assumes that all start flags are to the left of their corresponding end flag.
 
-    write_0 * 0 >:0 end
-    write_1 * 0 >:1 end
-    write_2 * 1 >:0 end
+# Assumes that the size of sum is at least 1 bit greater than n1 and n2.
+
+# Assumes that sum is filled with 0s before being called
+
+# Note that start flags are found at the actual start of the number,
+# while end flags are found one past the actual end of the number.
+
+# Note that n1 and n2 can be different sizes
+
+    # Go to the next n1 bit
+    goto_n1_end_flag * !goto(n1_end) check_n1_start
+    check_n1_start * !if(n1_start) FN1_goto_n2_end_flag : goto_n1_end
+    goto_n1_end * * < set_n1_end
+    set_n1_end * !flag(n1_end) compare_n1
+
+    # Compare the next n1 bit
+    compare_n1 0 !goto(n2_end) check_n2_start_0
+    compare_n1 1 !goto(n2_end) check_n2_start_1
+
+    # Go to the next n2 bit
+    check_n2_start_0 * !if(n2_start) FN2_skip_to_copy_bit : goto_n2_end_0
+    check_n2_start_1 * !if(n2_start) FN2_skip_to_copy_bit : goto_n2_end_1
+    goto_n2_end_0 * * < set_n1_end_0
+    goto_n2_end_1 * * < set_n1_end_1
+    set_n1_end_0 * !flag(n2_end) compare_n2_0
+    set_n1_end_1 * !flag(n2_end) compare_n2_1
+
+    # Compare the next n2 bit
+    compare_n2_0 0 !goto(sum_end) goto_sum_end_0
+    compare_n2_0 1 !goto(sum_end) goto_sum_end_1
+    compare_n2_1 0 !goto(sum_end) goto_sum_end_1
+    compare_n2_1 1 !goto(sum_end) goto_sum_end_2
+
+    # Go to the next sum bit
+    goto_sum_end_0 * * < set_sum_end_0
+    goto_sum_end_1 * * < set_sum_end_1
+    goto_sum_end_2 * * < set_sum_end_2
+
+    # Set the new end flag and check the carry bit
+    set_sum_end_0 0 !flag(sum_end) goto_n1_end_flag
+    set_sum_end_0 1 !flag(sum_end) write_1
+    set_sum_end_1 0 !flag(sum_end) write_1
+    set_sum_end_1 1 !flag(sum_end) write_2
+    set_sum_end_2 0 !flag(sum_end) write_2
+    set_sum_end_2 1 !flag(sum_end) write_3
+
+    # Write bits and loop back to beginning
+    write_1 * 1 * goto_n1_end_flag
+    write_2 * 0 <:1 goto_n1_end_flag
+    write_3 * 1 <:1 goto_n1_end_flag
+
+
+    # Reached the end of n1, so copy the rest of n2 to the sum
+    # States here are prefixed with FN1 (short for finished n1) to avoid naming conflicts with the rest of the function
+
+    # Go to the next n2 bit
+    FN1_goto_n2_end_flag * !goto(n2_end) FN1_check_n2_start
+    FN1_check_n2_start * !if(n2_start) return : FN1_goto_n2_end
+    FN1_goto_n2_end * * < FN1_set_n2_end
+    FN1_set_n2_end * !flag(n2_end) FN1_copy_n2_end
+
+    # Go to the next sum bit
+    FN1_copy_n2_end 0 !goto(sum_end) FN1_goto_sum_end_0
+    FN1_copy_n2_end 1 !goto(sum_end) FN1_goto_sum_end_1
+    FN1_goto_sum_end_0 * * < FN1_set_sum_end_flag_0
+    FN1_goto_sum_end_1 * * < FN1_set_sum_end_flag_1
+
+    FN1_set_sum_end_flag_0 * !flag(sum_end) FN1_goto_n2_end_flag
+    FN1_set_sum_end_flag_1 * !flag(sum_end) FN1_paste_bit
+
+    # Paste the bit and loop back
+    FN1_paste_bit 0 1 * FN1_goto_n2_end_flag
+    FN1_paste_bit 1 0 <:1 FN1_goto_n2_end_flag
+
+
+    # Reached the end of n2, so copy the rest of n1 to the sum
+    # States here are prefixed with FN2 (short for finished n2) to avoid naming conflicts with the rest of the function
+    # Note: the n1_end flag will have already been changed in the current loop when arriving here, so don't move the
+    # n1_end flag in the first loop
+
+    FN2_skip_to_copy_bit * !goto(n1_end) FN2_copy_n1_end
+
+    FN2_goto_n1_end_flag * !goto(n1_end) FN2_check_n1_start
+    FN2_check_n1_start * !if(n1_start) return : FN2_goto_n1_end
+    FN2_goto_n1_end * * < FN2_set_n1_end
+    FN2_set_n1_end * !flag(n1_end) FN2_copy_n1_end
+
+    # Go to the next sum bit
+    FN2_copy_n1_end 0 !goto(sum_end) FN2_goto_sum_end_0
+    FN2_copy_n1_end 1 !goto(sum_end) FN2_goto_sum_end_1
+    FN2_goto_sum_end_0 * * < FN2_set_sum_end_flag_0
+    FN2_goto_sum_end_1 * * < FN2_set_sum_end_flag_1
+
+    FN2_set_sum_end_flag_0 * !flag(sum_end) FN2_goto_n1_end_flag
+    FN2_set_sum_end_flag_1 * !flag(sum_end) FN2_paste_bit
+
+    # Paste the bit and loop back
+    FN2_paste_bit 0 1 * FN2_goto_n1_end_flag
+    FN2_paste_bit 1 0 <:1 FN2_goto_n1_end_flag

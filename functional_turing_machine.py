@@ -2,7 +2,7 @@ import sys
 import re
 
 class TuringTape:
-    def __init__(self, max_size=10000):
+    def __init__(self, max_size):
         "Create a tape with maximum size max_size."
         self._tape = [0]
         self._position = 0
@@ -60,16 +60,12 @@ class TuringTape:
         else:
             raise IndexError("Index out of range of tape.")
 
-    '''
-    def set_flag(self, flag_name):
-        self._flags[flag_name] = self.get_position()
-
-    def goto_flag(self, flag_name):
-        if flag_name in self._flags.keys():
-            self._position = self._flags[flag_name]
+    def get_value_at(self, pos):
+        if 0 <= pos < len(self._tape):
+            return self._tape[pos]
         else:
-            raise KeyError("Invalid flag name.")
-    '''
+            raise IndexError("Index out of range of tape")
+
 
     def __repr__(self):
         "A list-like representation of the tape, where the cursor looks like: '>X<'"
@@ -79,19 +75,27 @@ class TuringTape:
 			' '.join(str(cell) for cell in self._tape[self.get_position() + 1:]) +
 			(']' if self.get_position() + 1 == len(self._tape) else ' ]'))
 
-def _unescape(in_str):
-    index = 0
-    out_str = ""
-    while index < len(in_str):
-        if in_str[index] == "\\":
-            out_str += in_str[index+1]
-            index += 2
-        else:
-            out_str += in_str[index]
-            index += 1
-    return out_str
-
 if __name__ == "__main__":
+    max_tape_size = 10000
+    max_stack_size = 1000
+    print_tape = False
+    print_state = print_tape and False
+
+    def unescape(in_str):
+        index = 0
+        out_str = ""
+        while index < len(in_str):
+            if in_str[index] == "\\":
+                if in_str[index+1] == 'n':
+                    out_str += '\n'
+                else:
+                    out_str += in_str[index+1]
+                index += 2
+            else:
+                out_str += in_str[index]
+                index += 1
+        return out_str
+
     # Get command line arguments
     command_line_args = sys.argv
 
@@ -117,12 +121,12 @@ if __name__ == "__main__":
     functions = {}
     curr_function = None
     empty_line_pattern = re.compile(r"^\s*(?:#.*)?$")
-    new_func_pattern = re.compile(r"^\s*@(?P<name>[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*[a-zA-Z_]\w*\s*(?:,\s*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s*(?P<initial_state>[a-zA-Z_]\w*)\s*(?:#.*)?$")
-    exec_func_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!(?P<function>[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*[a-zA-Z_]\w*\s*(?:,\s*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s+(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
-    move_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+(?P<final_value>[01\*])\s+(?P<operation>[<>\*])(?:(?<!\*)(?P<count>[1-9][0-9]*)?(?::(?P<fill>[01\*]))?)?\s+(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
-    if_pattern = re.compile(r"^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!if\s*\(\s*(?P<condition>[a-zA-Z_]\w*)\s*\)\s*(?P<true_state>[a-zA-Z_]\w*)\s*:\s*(?P<false_state>[a-zA-Z_]\w*)\s*(?:#.*)?$")
-    input_pattern = re.compile(r'^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!input\s*\(\s*(?P<min_count>[1-9]\d*)\s*,\s*(?:(?P<max_count>[1-9]\d*),\s*)?"(?P<prompt>(?:(?<!\\)(?:\\{2})*\\"|[^"\\])*(?<!\\)(?:\\{2})*)"\s*\)\s*(?P<final_state>[a-zA-Z_]\w*|\*)\s*(?:#.*)?$')
-    print_pattern = re.compile(r'^\s*(?P<initial_state>[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!print\s*\(\s*"(?P<text>(?:(?<!\\)(?:\\{2})*\\"|[^"\\])*(?<!\\)(?:\\{2})*)"\s*\)\s*(?P<final_state>[a-zA-Z_]\w*)\s*(?:#.*)?$')
+    new_func_pattern = re.compile(r"^\s*@(?P<name>\d*[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*\d*[a-zA-Z_]\w*\s*(?:,\s*\d*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s*(?:#.*)?$")
+    exec_func_pattern = re.compile(r"^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!(?P<function>\d*[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*\d*[a-zA-Z_]\w*\s*(?:,\s*\d*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s+(?P<final_state>\d*[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
+    move_pattern = re.compile(r"^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+(?P<final_value>[01\*])\s+(?P<operation>[<>\*])(?:(?<!\*)(?P<count>[1-9][0-9]*)?(?::(?P<fill>[01\*]))?)?\s+(?P<final_state>\d*[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
+    if_pattern = re.compile(r"^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!if\s*\(\s*(?P<condition>\d*[a-zA-Z_]\w*)\s*\)\s*(?P<true_state>\d*[a-zA-Z_]\w*)\s*:\s*(?P<false_state>\d*[a-zA-Z_]\w*)\s*(?:#.*)?$")
+    input_pattern = re.compile(r'^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!input\s*\(\s*(?P<min_count>[1-9]\d*|0)\s*,\s*(?:(?P<max_count>[1-9]\d*),\s*)?"(?P<prompt>(?:(?<!\\)(?:\\{2})*\\["n]|(?<!\\)(?:\\{2})*[^"\\])*(?<!\\)(?:\\{2})*)"\s*\)\s*(?P<final_state>\d*[a-zA-Z_]\w*|\*)\s*(?:#.*)?$')
+    print_str_pattern = re.compile(r'^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!print_str\s*\(\s*"(?P<text>(?:(?<!\\)(?:\\{2})*\\["n]|(?<!\\)(?:\\{2})*[^"\\])*(?<!\\)(?:\\{2})*)"\s*\)\s*(?P<final_state>\d*[a-zA-Z_]\w*)\s*(?:#.*)?$')
 
     for line_num, line in enumerate(script):
         # Use a 1-indexed line number
@@ -140,7 +144,7 @@ if __name__ == "__main__":
             # Get expression information
             name = new_func_match.group("name")
 
-            if name in ("flag", "goto", "if", "input", "print"):
+            if name in ("flag", "goto", "if", "input", "print_str"):
                 # User tried to re-define builtin function
                 raise ValueError(f'Unable to re-define builtin function "!{name}" on line {line_num}.')
 
@@ -181,7 +185,8 @@ if __name__ == "__main__":
                 raise ValueError(f"Repeated expression on line {line_num}.")
 
             function = exec_func_match.group("function")
-            if function in ("if", "input", "print"):
+            if function in ("if", "input", "print_str"):
+                # Invalid builtin function call
                 raise ValueError(f'Incorrect syntax for executing builtin function "!{function}" on line {line_num}.')
 
             parameters = []
@@ -191,9 +196,14 @@ if __name__ == "__main__":
 
             final_state = exec_func_match.group("final_state")
 
-            if function in ("goto", "flag") and final_state in (initial_state, '*'):
+            if function in ("goto", "flag", "print_bit") and final_state in (initial_state, '*'):
                 # Infinite loop
                 raise ValueError(f"Infinite loop detected on line {line_num}.")
+
+            if (function in ("goto, flag") and len(parameters) != 1) or (function == "print_bit" and not 0 <= len(parameters) <= 2):
+                # Invalid builtin function call
+                raise ValueError(f'Incorrect number of parameters for function "!{function}" on line {line_num}.')
+
 
             # Add expression
             functions[curr_function]["expressions"][(initial_state, initial_value)] = \
@@ -253,7 +263,10 @@ if __name__ == "__main__":
             final_state = input_match.group("final_state")
 
             if max_count is None:
-                max_count = min_count
+                if min_count == '0':
+                    raise ValueError(f"The minimum input count was 0 and the maximum input count was not specified on line {line_num}.")
+                else:
+                    max_count = min_count
             elif int(max_count) < int(min_count):
                 raise ValueError(f"The maximum input count is less than the minimum input count on line {line_num}.")
 
@@ -262,23 +275,23 @@ if __name__ == "__main__":
                 raise ValueError(f"Infinite loop detected on line {line_num}.")
 
             functions[curr_function]["expressions"][(initial_state, initial_value)] = \
-                {"is_function": True, "function": "input", "min_count": min_count, "max_count": max_count, "prompt": _unescape(prompt), "final_state": final_state}
+                {"is_function": True, "function": "input", "min_count": min_count, "max_count": max_count, "prompt": unescape(prompt), "final_state": final_state}
 
             continue
 
-        print_match = print_pattern.match(line)
-        if print_match is not None:
-            initial_state = print_match.group("initial_state")
-            initial_value = print_match.group("initial_value")
-            text = print_match.group("text")
-            final_state = print_match.group("final_state")
+        print_str_match = print_str_pattern.match(line)
+        if print_str_match is not None:
+            initial_state = print_str_match.group("initial_state")
+            initial_value = print_str_match.group("initial_value")
+            text = print_str_match.group("text")
+            final_state = print_str_match.group("final_state")
 
             if final_state == initial_state:
                 # Infinite loop
                 raise ValueError(f"Infinite loop detected on line {line_num}.")
 
             functions[curr_function]["expressions"][(initial_state, initial_value)] = \
-                {"is_function": True, "function": "print", "text": _unescape(text), "final_state": final_state}
+                {"is_function": True, "function": "print_str", "text": unescape(text), "final_state": final_state}
             continue
 
         # Invalid expression
@@ -297,12 +310,16 @@ if __name__ == "__main__":
 
 
     # Initialize the tape
-    tape = TuringTape()
+    tape = TuringTape(max_tape_size)
     stack = [{"name": "main", "flags": {}, "state": functions["main"]["initial_state"]}]
 
     # Run the program
     while True:
-        print(tape)
+        if print_state:
+            print(tape, end = ' ')
+            print(f"Next state: {stack[-1]['state']}")
+        elif print_tape:
+            print(tape)
 
         # Get the current command
         try:
@@ -369,8 +386,32 @@ if __name__ == "__main__":
 
                 stack[-1]["state"] = cmd["final_state"]
 
-            elif cmd["function"] == "print":
+            elif cmd["function"] == "print_str":
                 print(cmd["text"])
+                stack[-1]["state"] = cmd["final_state"]
+
+            elif cmd["function"] == "print_bit":
+                if len(cmd["parameters"]) == 0:
+                    print(tape.selected)
+
+                elif cmd["parameters"][0] not in stack[-1]["flags"]:
+                    raise KeyError(f"Flag name {cmd['parameters'][0]} referenced before creation.")
+
+                else:
+                    first_pos = stack[-1]["flags"][cmd["parameters"][0]]
+                    if len(cmd["parameters"]) == 1:
+                        print(tape.get_value_at(first_pos))
+
+                    elif cmd["parameters"][1] not in stack[-1]["flags"]:
+                        raise KeyError(f"Flag name {cmd['parameters'][1]} referenced before creation.")
+
+                    else:
+                        second_pos = stack[-1]["flags"][cmd["parameters"][1]]
+                        if first_pos >= second_pos:
+                            raise IndexError(f"Flag {cmd['parameters'][0]} was not found before flag {cmd['parameters'][1]}")
+
+                        print(', '.join(str(tape.get_value_at(pos)) for pos in range(first_pos, second_pos)))
+
                 stack[-1]["state"] = cmd["final_state"]
 
             else:
@@ -379,6 +420,8 @@ if __name__ == "__main__":
                     raise ValueError(f"Invalid function {cmd['function']}.")
                 elif len(cmd["parameters"]) != len(functions[cmd["function"]]["parameters"]):
                     raise IndexError(f"Incorrect number of parameters for function !{cmd['function']}.")
+                elif len(stack) == max_stack_size:
+                    raise ValueError(f"The stack has reached its maximum recursion depth of {max_stack_size}")
 
                 if cmd["final_state"] != '*':
                     stack[-1]["state"] = cmd["final_state"]
