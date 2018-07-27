@@ -5,7 +5,6 @@ Create an interpreter for a language inspired by Turing Machines, but with the a
 
 ### TODO
 - Write more examples
-- Clean up function calling code
-- Add runtime user input
+- Clean up stack code
 - Update readme with instructions/documentation
 - Create a GUI (maybe)
