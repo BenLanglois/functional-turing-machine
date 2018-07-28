@@ -1,0 +1,30 @@
+@main () set_first_flag
+    set_first_flag * !flag(bit_1) load_first
+    load_first * !input(1, "Enter the first bit to be added:") set_second_flag
+
+    set_second_flag * !flag(bit_2) load_second
+    load_second * !input(1, "Enter the second bit to be added:") set_start_sum
+
+    set_start_sum * !flag(start_sum) goto_end_sum
+    goto_end_sum * * >2 set_end_sum
+    set_end_sum * !flag(end_sum) run_add
+    run_add * !add_1(bit_1, bit_2, start_sum) print_text
+
+    print_text * !print_str("The sum of the two bits is:") print_sum
+    print_sum * !print_bit(start_sum, end_sum) end
+
+
+@add_1(bit_1, bit_2, start_out) goto_1
+    goto_1 * !goto(bit_1) check_1
+
+    check_1 0 !goto(bit_2) check_2_0
+    check_1 1 !goto(bit_2) check_2_1
+
+    check_2_0 0 !goto(start_out) return
+    check_2_0 1 !goto(start_out) write_1
+
+    check_2_1 0 !goto(start_out) write_1
+    check_2_1 1 !goto(start_out) write_2
+
+    write_1 * * >:1 return
+    write_2 * 1 * return

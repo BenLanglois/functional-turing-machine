@@ -1,19 +1,22 @@
 # Determines if two bits (positions 0 and 1) are equal
 
-@main () l1_flag
+@main() l1_flag
     # Load the first bit
-    l1_flag * !flag (bit1) l1
-    l1 * 1 > l2_flag
+    l1_flag * !flag(bit1) l1
+    l1 * !input(1, "Enter the first bit:") l2_flag
 
     # Load the second bit
     l2_flag * !flag (bit2) l2
-    l2 * 1 > out_flag
+    l2 * !input(1, "Enter the second bit:") out_flag
 
     # Set the output flag and call the equal function
     out_flag * !flag (output) compare
 
     # Call the equal function
-    compare * !equal (bit1, bit2, output) end
+    compare * !equal (bit1, bit2, output) print_result
+
+    print_result 0 !print_str("You entered two different bits!") end
+    print_result 1 !print_str("You entered the same bit twice!") end
 
 @equal (first, second, output) goto_first
     goto_first * !goto (first) check_first
