@@ -8,3 +8,4 @@ Create an interpreter for a language inspired by Turing Machines, but with the a
 - Clean up stack code
 - Update readme with instructions/documentation
 - Create a GUI (maybe)
+- Add command line options
