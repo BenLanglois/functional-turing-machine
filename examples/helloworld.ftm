@@ -1,2 +1,2 @@
 @main() start
-    start * !print_str("Hello, world!") end
+    start * !print_str("Hello, world!") return

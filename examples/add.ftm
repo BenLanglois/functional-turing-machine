@@ -3,15 +3,15 @@
 
     # Set n1 flags
     set_start1 * !flag(start1) get_1
-    get_1 * !input(1, 8, "Enter first number (1-8 bits):") set_end1
+    get_1 * !input(1, 7, "Enter first number (1-7 bits):") set_end1
     set_end1 * !flag(end1) get_2
 
     # Set n2 flags (Note: start2 == end1)
-    get_2 * !input(1, 8, "Enter second number (1-8 bits):") set_end2
+    get_2 * !input(1, 7, "Enter second number (1-7 bits):") set_end2
     set_end2 * !flag(end2) goto_sum_end
 
     # Set sum flags
-    goto_sum_end * * >9 set_sum_end
+    goto_sum_end * * >8 set_sum_end
     set_sum_end * !flag(sum_end) exec_add
 
     # Execute the !add function

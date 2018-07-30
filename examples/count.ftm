@@ -1,0 +1,47 @@
+@main() set_count1_left
+# Counts the number of 1s and 0s entered by the user, then prints the result
+# The user can enter up to 10 bits, so 4 bits are needed to store the counts
+
+    # Set up count1
+    set_count1_left * !flag(count1_left) goto_count1_right
+    goto_count1_right * * >4 set_count1_right
+    set_count1_right * !flag(count1_right) set_count0_left
+
+    # Set up count0
+    set_count0_left * !flag(count0_left) goto_count0_right
+    goto_count0_right * * >4 set_count0_right
+    set_count0_right * !flag(count0_right) set_input_start
+
+    # Get user input
+    set_input_start * !flag(input_start) get_user_input
+    get_user_input * !input(0, 15, "Enter up to 15 bits:") check_input_start
+
+    # Loop through input and count 0s and 1s
+    check_input_start * !if(input_start) print_count1_str : goto_next_bit
+    goto_next_bit * * < inc_count
+    inc_count 0 !inc(count0_right) check_input_start
+    inc_count 1 !inc(count1_right) check_input_start
+
+    # Print result
+    print_count1_str * !print_str("Number of 1's entered:") print_count1_val
+    print_count1_val * !print_bit(count1_left, count1_right) print_count0_str
+    print_count0_str * !print_str("Number of 0's entered:") print_count0_val
+    print_count0_val * !print_bit(count0_left, count0_right) return
+
+
+
+@inc(start) set_return_pos
+# Increments the bits to the left of the "start" flag by 1
+# Assumes that enough space is available, so the function does not check for overflow
+
+    # Set the return position flag and go to the start of the number
+    set_return_pos * !flag(return_pos) goto_start_flag
+    goto_start_flag * !goto(start) goto_start
+    goto_start * * < inc
+
+    # Main loop: increment the number by 1
+    inc 0 1 * goto_return_pos
+    inc 1 0 < inc # Roll over bit and loop back
+
+    # Go back to the position where the function was called
+    goto_return_pos * !goto(return_pos) return

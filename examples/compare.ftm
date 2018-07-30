@@ -15,8 +15,8 @@
     # Call the equal function
     compare * !equal (bit1, bit2, output) print_result
 
-    print_result 0 !print_str("You entered two different bits!") end
-    print_result 1 !print_str("You entered the same bit twice!") end
+    print_result 0 !print_str("You entered two different bits!") return
+    print_result 1 !print_str("You entered the same bit twice!") return
 
 @equal (first, second, output) goto_first
     goto_first * !goto (first) check_first
@@ -34,5 +34,5 @@
     check_second_1 1 !goto (output) return_1
 
     # Return value
-    return_0 * 0 * end
-    return_1 * 1 * end
+    return_0 * 0 * return
+    return_1 * 1 * return

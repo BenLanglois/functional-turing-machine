@@ -1,0 +1,30 @@
+@main() begin_set_start
+# Recieves a number from the user and checks if it is a palindrome
+# A palindrome is a number that is the same when read forwards or backwards (e.g. 111010111)
+
+    # Get user input
+    begin_set_start * !flag(start) get_user_input
+    get_user_input * !input(1, 50, "Enter a number:") goto_end
+
+    # Go to the end of the number
+    goto_end * * < check_start_flag
+    check_start_flag * !if(start) print_valid_palindrome : set_end
+    set_end * !flag(end) check_end
+
+    # Check the last digit
+    check_end 0 !goto(start) check_start_0
+    check_end 1 !goto(start) check_start_1
+
+    # Compare with the first digit
+    check_start_0 1 !print_str("You did not enter a palindrome!") return
+    check_start_0 0 * > check_end_flag
+    check_start_1 0 !print_str("You did not enter a palindrome!") return
+    check_start_1 1 * > check_end_flag
+
+    # Check if the number is done and loop back
+    check_end_flag * !if(end) print_valid_palindrome : set_start
+    set_start * !flag(start) goto_end_flag
+    goto_end_flag * !goto(end) goto_end
+
+    # Print success message
+    print_valid_palindrome * !print_str("You entered a palindrome!") return

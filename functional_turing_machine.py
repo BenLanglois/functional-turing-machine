@@ -2,9 +2,10 @@ import sys
 import re
 
 class TuringTape:
-    def __init__(self, max_size):
-        "Create a tape with maximum size max_size."
-        self._tape = [0]
+    def __init__(self, max_size, new_cell_value=0):
+        "Create a tape with maximum size max_size and where new cells are set to new_cell_value."
+        self._new_cell_value = new_cell_value
+        self._tape = [self._new_cell_value]
         self._position = 0
         self._max_size = int(max_size)
         self._flags = {}
@@ -26,12 +27,12 @@ class TuringTape:
 
         if self.get_position() + count >= len(self._tape):
             # Extend the tape
-            self._tape += [0] * (1 + self.get_position() + count - len(self._tape))
+            self._tape += [self._new_cell_value] * (1 + self.get_position() + count - len(self._tape))
 
         if fill != '*':
             # Change all cells that the tape moves over to the fill value
             for i in range(self.get_position() + 1, self.get_position() + count + 1):
-                self._tape[i] = int(fill)
+                self._tape[i] = fill
 
         # Move the cursor
         self._position += count
@@ -44,7 +45,7 @@ class TuringTape:
         if fill != '*':
             # Change all cells that the tape moves over to the fill value
             for i in range(self.get_position() - count, self.get_position()):
-                self._tape[i] = int(fill)
+                self._tape[i] = fill
 
         # Move the cursor
         self._position -= count
@@ -55,6 +56,8 @@ class TuringTape:
 
     def set_position(self, new_pos):
         "Sets the position of the tape."
+        if not isinstance(new_pos, int):
+            raise TypeError("new_pos must be an integer")
         if 0 <= new_pos < len(self._tape):
             self._position = new_pos
         else:
@@ -65,7 +68,6 @@ class TuringTape:
             return self._tape[pos]
         else:
             raise IndexError("Index out of range of tape")
-
 
     def __repr__(self):
         "A list-like representation of the tape, where the cursor looks like: '>X<'"
@@ -80,21 +82,6 @@ if __name__ == "__main__":
     max_stack_size = 1000
     print_tape = False
     print_state = print_tape and False
-
-    def unescape(in_str):
-        index = 0
-        out_str = ""
-        while index < len(in_str):
-            if in_str[index] == "\\":
-                if in_str[index+1] == 'n':
-                    out_str += '\n'
-                else:
-                    out_str += in_str[index+1]
-                index += 2
-            else:
-                out_str += in_str[index]
-                index += 1
-        return out_str
 
     class Stack:
         def __init__(self, max_size):
@@ -160,22 +147,24 @@ if __name__ == "__main__":
     if file_name_pattern.match(input_file_name) is None:
         raise NameError('Invalid file name. Functional Turing Machine files must end with ".ftm"')
 
-
     # Read file
     with open(input_file_name) as input_file:
         script = input_file.readlines()
 
-    # Compile the script
+    # Initialize variables
     functions = {}
     curr_function = None
+
+    # Compile regexes
     empty_line_pattern = re.compile(r"^\s*(?:#.*)?$")
     new_func_pattern = re.compile(r"^\s*@(?P<name>\d*[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*\d*[a-zA-Z_]\w*\s*(?:,\s*\d*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s*(?:#.*)?$")
     exec_func_pattern = re.compile(r"^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!(?P<function>\d*[a-zA-Z_]\w*)\s*\((?P<parameters>(?:\s*\d*[a-zA-Z_]\w*\s*(?:,\s*\d*[a-zA-Z_]\w*\s*)*)|(?:\s*))\)\s+(?P<next_state>\d*[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
     move_pattern = re.compile(r"^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+(?P<next_value>[01\*])\s+(?P<operation>[<>\*])(?:(?<!\*)(?P<count>[1-9][0-9]*)?(?::(?P<fill>[01\*]))?)?\s+(?P<next_state>\d*[a-zA-Z_]\w*|\*)\s*(?:#.*)?$")
     if_pattern = re.compile(r"^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!if\s*\(\s*(?P<condition>\d*[a-zA-Z_]\w*)\s*\)\s*(?P<true_state>\d*[a-zA-Z_]\w*)\s*:\s*(?P<false_state>\d*[a-zA-Z_]\w*)\s*(?:#.*)?$")
-    input_pattern = re.compile(r'^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!input\s*\(\s*(?P<min_count>[1-9]\d*|0)\s*,\s*(?:(?P<max_count>[1-9]\d*),\s*)?"(?P<prompt>(?:(?<!\\)(?:\\{2})*\\["n]|(?<!\\)(?:\\{2})*[^"\\])*(?<!\\)(?:\\{2})*)"\s*\)\s*(?P<next_state>\d*[a-zA-Z_]\w*|\*)\s*(?:#.*)?$')
-    print_str_pattern = re.compile(r'^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!print_str\s*\(\s*"(?P<text>(?:(?<!\\)(?:\\{2})*\\["n]|(?<!\\)(?:\\{2})*[^"\\])*(?<!\\)(?:\\{2})*)"\s*\)\s*(?P<next_state>\d*[a-zA-Z_]\w*)\s*(?:#.*)?$')
+    input_pattern = re.compile(r'^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!input\s*\(\s*(?P<min_count>[1-9]\d*|0)\s*,\s*(?:(?P<max_count>[1-9]\d*),\s*)?"(?P<prompt>.*)"\s*\)\s*(?P<next_state>\d*[a-zA-Z_]\w*|\*)\s*(?:#.*)?$')
+    print_str_pattern = re.compile(r'^\s*(?P<initial_state>\d*[a-zA-Z_]\w*)\s+(?P<initial_value>[01\*])\s+!print_str\s*\(\s*"(?P<text>.*)"\s*\)\s*(?P<next_state>\d*[a-zA-Z_]\w*)\s*(?:#.*)?$')
 
+    # Compile the script
     for line_num, line in enumerate(script):
         # Use a 1-indexed line number
         line_num += 1
@@ -224,9 +213,10 @@ if __name__ == "__main__":
 
         exec_func_match = exec_func_pattern.match(line)
         if exec_func_match is not None:
-            # Expression calls a function
+            # Expression calls a non-special function
             initial_state = exec_func_match.group("initial_state")
             initial_value = exec_func_match.group("initial_value")
+            initial_value = '*' if initial_value == '*' else int(initial_value)
 
             if (initial_state, initial_value) in functions[curr_function]["expressions"].keys():
                 # Repeated expression
@@ -234,13 +224,13 @@ if __name__ == "__main__":
 
             function = exec_func_match.group("function")
             if function in ("if", "input", "print_str"):
-                # Invalid builtin function call
+                # Special function called with normal syntax
                 raise ValueError(f'Incorrect syntax for executing builtin function "!{function}" on line {line_num}.')
 
             parameters = []
-            for p in exec_func_match.group("parameters").split(','):
-                if p.strip() != '':
-                    parameters.append(p.strip())
+            for p in map(str.strip, exec_func_match.group("parameters").split(',')):
+                if p != '':
+                    parameters.append(p)
 
             next_state = exec_func_match.group("next_state")
 
@@ -267,15 +257,18 @@ if __name__ == "__main__":
             # Expression does not call a function
             initial_state = move_match.group("initial_state")
             initial_value = move_match.group("initial_value")
+            initial_value = '*' if initial_value == '*' else int(initial_value)
 
             if (initial_state, initial_value) in functions[curr_function]["expressions"].keys():
                 # Repeated expression
                 raise ValueError(f"Repeated expression on line {line_num}.")
 
             next_value = move_match.group("next_value")
+            next_value = '*' if next_value == '*' else int(next_value)
             operation = move_match.group("operation")
-            count = move_match.group("count") or '1'
+            count = int(move_match.group("count") or 1)
             fill = move_match.group("fill") or '*'
+            fill = '*' if fill == '*' else int(fill)
             next_state = move_match.group("next_state")
 
             if operation == '*' and next_state in ('*', initial_state) and ('*' in (initial_value, next_value) or next_value == initial_value):
@@ -292,6 +285,7 @@ if __name__ == "__main__":
         if if_match is not None:
             initial_state = if_match.group("initial_state")
             initial_value = if_match.group("initial_value")
+            initial_value = '*' if initial_value == '*' else int(initial_value)
             condition = if_match.group("condition")
             true_state = if_match.group("true_state")
             false_state = if_match.group("false_state")
@@ -308,6 +302,8 @@ if __name__ == "__main__":
         if input_match is not None:
             initial_state = input_match.group("initial_state")
             initial_value = input_match.group("initial_value")
+            initial_value = '*' if initial_value == '*' else int(initial_value)
+            # Note: Leave min and max count as strings because they will need to be added to a regex string later
             min_count = input_match.group("min_count")
             max_count = input_match.group("max_count")
             prompt = input_match.group("prompt")
@@ -326,7 +322,7 @@ if __name__ == "__main__":
                 raise ValueError(f"Infinite loop detected on line {line_num}.")
 
             functions[curr_function]["expressions"][(initial_state, initial_value)] = \
-                {"is_function": True, "function": "input", "min_count": min_count, "max_count": max_count, "prompt": unescape(prompt), "next_state": next_state}
+                {"is_function": True, "function": "input", "min_count": min_count, "max_count": max_count, "prompt": prompt, "next_state": next_state}
 
             continue
 
@@ -334,6 +330,7 @@ if __name__ == "__main__":
         if print_str_match is not None:
             initial_state = print_str_match.group("initial_state")
             initial_value = print_str_match.group("initial_value")
+            initial_value = '*' if initial_value == '*' else int(initial_value)
             text = print_str_match.group("text")
             next_state = print_str_match.group("next_state")
 
@@ -342,7 +339,7 @@ if __name__ == "__main__":
                 raise ValueError(f"Infinite loop detected on line {line_num}.")
 
             functions[curr_function]["expressions"][(initial_state, initial_value)] = \
-                {"is_function": True, "function": "print_str", "text": unescape(text), "next_state": next_state}
+                {"is_function": True, "function": "print_str", "text": text, "next_state": next_state}
             continue
 
         # Invalid expression
@@ -372,7 +369,7 @@ if __name__ == "__main__":
             cmd = functions[stack.name]["expressions"][(stack.state, '*')]
         except KeyError:
             try:
-                cmd = functions[stack.name]["expressions"][(stack.state, str(tape.selected))]
+                cmd = functions[stack.name]["expressions"][(stack.state, tape.selected)]
             except KeyError:
                 # Remove top layer from the stack
                 stack.pop()
@@ -383,8 +380,7 @@ if __name__ == "__main__":
 
         # Print the tape to the screen
         if print_state:
-            print(tape, end=' ')
-            print(f"Next state: {stack.state}")
+            print(tape, f"Next state: {stack.state}")
         elif print_tape:
             print(tape)
 
@@ -495,12 +491,12 @@ if __name__ == "__main__":
             # Move expression
             # Set the selected value
             if cmd["next_value"] != '*':
-                tape.selected = int(cmd["next_value"])
+                tape.selected = cmd["next_value"]
 
             if cmd["operation"] == '<':
-                tape.left(int(cmd["count"]), cmd["fill"])
+                tape.left(cmd["count"], cmd["fill"])
             elif cmd["operation"] == '>':
-                tape.right(int(cmd["count"]), cmd["fill"])
+                tape.right(cmd["count"], cmd["fill"])
 
             if cmd["next_state"] != '*':
                 stack.state = cmd["next_state"]

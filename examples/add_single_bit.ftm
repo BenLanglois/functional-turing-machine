@@ -11,7 +11,7 @@
     run_add * !add_1(bit_1, bit_2, start_sum) print_text
 
     print_text * !print_str("The sum of the two bits is:") print_sum
-    print_sum * !print_bit(start_sum, end_sum) end
+    print_sum * !print_bit(start_sum, end_sum) return
 
 
 @add_1(bit_1, bit_2, start_out) goto_1
