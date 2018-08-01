@@ -1,0 +1,22 @@
+# Inverts the bits from the user's input
+# Example: 00101000 -> 11010111
+
+@main() set_input_start
+    # Get user input
+    set_input_start * !flag(input_start) get_user_input
+    get_user_input * !input(1, 50, "Enter a number:") set_input_end
+    set_input_end * !flag(input_end) goto_first_bit
+    goto_first_bit * * < check_input_start
+
+    # Loop through user input
+    check_input_start * !if(input_start) flip_last_bit : flip_curr_bit
+    flip_curr_bit 0 1 < check_input_start # Change a 0 to a 1
+    flip_curr_bit 1 0 < check_input_start # Change a 1 to a 0
+
+    # Flip the last bit
+    flip_last_bit 0 1 * print_result_message
+    flip_last_bit 1 0 * print_result_message
+
+    # Print the result
+    print_result_message * !print_str("The inverse of your input is:") print_result_value
+    print_result_value * !print_val(input_start, input_end) return

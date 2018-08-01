@@ -1,3 +1,6 @@
+# Adds two numbers of length 1 to 7 bits
+# The two numbers can be different lengths
+
 @main() set_start1
     # Get user input and set flags for adding
 
@@ -19,7 +22,7 @@
 
     # Print the result to the screen
     print_text * !print_str("The sum of the two numbers you entered is:") print_sum
-    print_sum * !print_bit(end2, sum_end) return
+    print_sum * !print_val(end2, sum_end) return
 
 
 

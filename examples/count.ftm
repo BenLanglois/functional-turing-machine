@@ -1,7 +1,7 @@
-@main() set_count1_left
 # Counts the number of 1s and 0s entered by the user, then prints the result
-# The user can enter up to 10 bits, so 4 bits are needed to store the counts
+# The user can enter up to 15 bits, so 4 bits are needed to store the counts
 
+@main() set_count1_left
     # Set up count1
     set_count1_left * !flag(count1_left) goto_count1_right
     goto_count1_right * * >4 set_count1_right
@@ -24,9 +24,9 @@
 
     # Print result
     print_count1_str * !print_str("Number of 1's entered:") print_count1_val
-    print_count1_val * !print_bit(count1_left, count1_right) print_count0_str
+    print_count1_val * !print_val(count1_left, count1_right) print_count0_str
     print_count0_str * !print_str("Number of 0's entered:") print_count0_val
-    print_count0_val * !print_bit(count0_left, count0_right) return
+    print_count0_val * !print_val(count0_left, count0_right) return
 
 
 

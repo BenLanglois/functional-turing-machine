@@ -78,11 +78,6 @@ class TuringTape:
 			(']' if self.get_position() + 1 == len(self._tape) else ' ]'))
 
 if __name__ == "__main__":
-    max_tape_size = 1000
-    max_stack_size = 1000
-    print_tape = False
-    print_state = print_tape and False
-
     class Stack:
         def __init__(self, max_size):
             self._items = []
@@ -120,30 +115,66 @@ if __name__ == "__main__":
         def set_flag(self, flag, pos):
             self._items[-1]["flags"][flag] = pos
 
-    '''class Function:
-        def __init__(self):
-            self._parameters = parameters
-            self._initial_state = initial_state
-            self._expressions = {}
-
-        def add_expression(self, initial_state, initial_value, value):
-            self._expressions[(initial_state, initial_value)] = value
-
-        def get_expression(self, initial_state, )'''
-
     # Get command line arguments
-    command_line_args = sys.argv
+    settings = {}
 
-    # Get file name
-    if len(command_line_args) == 2:
-        input_file_name = command_line_args[1]
-    elif len(command_line_args) == 1:
+    if len(sys.argv) == 1:
         input_file_name = input("Enter input file name: ")
     else:
-        raise ValueError("Incorrect number of command line arguments.")
+        input_file_name = sys.argv[1]
+        i = 2
+        while i < len(sys.argv):
+            arg = sys.argv[i].lower()
+
+            if arg == "-max_tape":
+                # Sets the maximum tape size
+                if "max_tape_size" in settings.keys():
+                    raise ValueError("Argument -max_tape specified more than once.")
+                settings["max_tape_size"] = int(sys.argv[i+1])
+                if settings["max_tape_size"] < 1:
+                    raise ValueError("Maximum tape size must be at least 1.")
+                i += 2
+
+            elif arg == "-max_stack":
+                # Sets the maximum stack size
+                if "max_stack_size" in settings.keys():
+                    raise ValueError("Argument -max_stack specified more than once.")
+                settings["max_stack_size"] = int(sys.argv[i+1])
+                if settings["max_stack_size"] < 1:
+                    raise ValueError("Maximum stack size must be at least 1.")
+                i += 2
+
+            elif arg == "-print_tape":
+                # Print the tape after every step
+                if "print_tape" in settings.keys():
+                    raise ValueError("Argument -print_tape specified more than once.")
+                settings["print_tape"] = True
+                i += 1
+
+            elif arg == "-print_state":
+                # Print the state after every step
+                if "print_state" in settings.keys():
+                    raise ValueError("Argument -print_state specified more than once.")
+                settings["print_state"] = True
+                i += 1
+
+            else:
+                # Invalid command line argument
+                raise KeyError(f"Invalid argument: {arg}.")
+
+    # Set defaults if not specified in comand line
+    if "max_stack_size" not in settings.keys():
+        settings["max_stack_size"] = 1000
+    if "max_tape_size" not in settings.keys():
+        settings["max_tape_size"] = 10000
+    if "print_tape" not in settings.keys():
+        settings["print_tape"] = False
+    if "print_state" not in settings.keys():
+        settings["print_state"] = False
 
     file_name_pattern = re.compile(r"^\w+\.ftm$")
 
+    # Validate file name
     if file_name_pattern.match(input_file_name) is None:
         raise NameError('Invalid file name. Functional Turing Machine files must end with ".ftm"')
 
@@ -234,14 +265,14 @@ if __name__ == "__main__":
 
             next_state = exec_func_match.group("next_state")
 
-            if function in ("flag", "print_bit") and next_state in (initial_state, '*'):
+            if function in ("flag", "print_val") and next_state in (initial_state, '*'):
                 # Infinite loop
                 raise ValueError(f"Infinite loop detected on line {line_num}.")
             elif function == "goto" and next_state in (initial_state, '*') and initial_state == '*':
                 # Infinite loop
                 raise ValueError(f"Infinite loop detected on line {line_num}.")
 
-            if (function in ("goto, flag") and len(parameters) != 1) or (function == "print_bit" and not 0 <= len(parameters) <= 2):
+            if (function in ("goto, flag") and len(parameters) != 1) or (function == "print_val" and not 0 <= len(parameters) <= 2):
                 # Invalid builtin function call
                 raise ValueError(f'Incorrect number of parameters for function "!{function}" on line {line_num}.')
 
@@ -348,18 +379,9 @@ if __name__ == "__main__":
     if "main" not in functions.keys():
         raise ValueError("No main function specified.")
 
-    '''
-    # print all expressions
-    for f in functions:
-        print(f"Name: {f}, Parameters: {functions[f]['parameters']}")
-        for e in functions[f]["expressions"]:
-            print(e, functions[f]["expressions"][e])
-    #'''
-
-
     # Initialize the tape
-    tape = TuringTape(max_tape_size)
-    stack = Stack(max_stack_size)
+    tape = TuringTape(settings["max_tape_size"])
+    stack = Stack(settings["max_stack_size"])
     stack.add("main", {}, functions["main"]["initial_state"])
 
     # Run the program
@@ -378,10 +400,10 @@ if __name__ == "__main__":
                 else:
                     continue
 
-        # Print the tape to the screen
-        if print_state:
+        # Print the tape/state to the screen as specified in the command line arguments
+        if settings["print_state"]:
             print(tape, f"Next state: {stack.state}")
-        elif print_tape:
+        elif settings["print_tape"]:
             print(tape)
 
         if cmd["is_function"]:
@@ -440,7 +462,7 @@ if __name__ == "__main__":
                 print(cmd["text"])
                 stack.state = cmd["next_state"]
 
-            elif cmd["function"] == "print_bit":
+            elif cmd["function"] == "print_val":
                 if len(cmd["parameters"]) == 0:
                     print(tape.selected)
                     stack.state = cmd["next_state"]

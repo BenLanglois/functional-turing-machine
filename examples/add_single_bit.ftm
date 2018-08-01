@@ -1,3 +1,10 @@
+# Adds two bits and prints the result
+# Possible inputs/outputs:
+    # 0 + 0 -> 00
+    # 0 + 1 -> 01
+    # 1 + 0 -> 01
+    # 1 + 1 -> 11
+
 @main () set_first_flag
     set_first_flag * !flag(bit_1) load_first
     load_first * !input(1, "Enter the first bit to be added:") set_second_flag
@@ -11,7 +18,7 @@
     run_add * !add_1(bit_1, bit_2, start_sum) print_text
 
     print_text * !print_str("The sum of the two bits is:") print_sum
-    print_sum * !print_bit(start_sum, end_sum) return
+    print_sum * !print_val(start_sum, end_sum) return
 
 
 @add_1(bit_1, bit_2, start_out) goto_1

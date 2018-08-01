@@ -1,7 +1,7 @@
-@main() begin_set_start
-# Recieves a number from the user and checks if it is a palindrome
+# Receives a number from the user and checks if it is a palindrome
 # A palindrome is a number that is the same when read forwards or backwards (e.g. 111010111)
 
+@main() begin_set_start
     # Get user input
     begin_set_start * !flag(start) get_user_input
     get_user_input * !input(1, 50, "Enter a number:") goto_end

@@ -1,2 +1,4 @@
+# Prints "Hello, world!" to the screen
+
 @main() start
     start * !print_str("Hello, world!") return

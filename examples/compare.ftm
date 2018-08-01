@@ -1,4 +1,4 @@
-# Determines if two bits (positions 0 and 1) are equal
+# Determines if two bits are equal
 
 @main() l1_flag
     # Load the first bit
