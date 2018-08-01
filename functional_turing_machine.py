@@ -172,7 +172,7 @@ if __name__ == "__main__":
     if "print_state" not in settings.keys():
         settings["print_state"] = False
 
-    file_name_pattern = re.compile(r"^\w+\.ftm$")
+    file_name_pattern = re.compile(r"^.+\.ftm$")
 
     # Validate file name
     if file_name_pattern.match(input_file_name) is None:
