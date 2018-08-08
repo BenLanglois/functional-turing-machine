@@ -229,8 +229,11 @@ if __name__ == "__main__":
             # Get parameters
             parameter_string = new_func_match.group("parameters")
             for p in parameter_string.split(','):
-                if p.strip() != '':
-                    functions[name]["parameters"].append(p.strip())
+                p = p.strip()
+                if p in functions[name]["parameters"]:
+                    raise ValueError(f"Repeated parameter on line {line_num}.")
+                if p != '':
+                    functions[name]["parameters"].append(p)
 
             # Main function cannot take any parameters
             if name == "main" and len(functions[name]["parameters"]) != 0:
@@ -442,11 +445,11 @@ if __name__ == "__main__":
                     # Get valid user input
                     if min_count == max_count:
                         if min_count == '1':
-                            user_input = input(f"ERROR: Enter a 0 or a 1: ")
+                            user_input = input(f"ERROR: Enter a single bit: ")
                         else:
-                            user_input = input(f"ERROR: Enter exactly {cmd['min_count']} 0s and 1s: ")
+                            user_input = input(f"ERROR: Enter exactly {cmd['min_count']} bits: ")
                     else:
-                        user_input = input(f"ERROR: Enter between {cmd['min_count']} and {cmd['max_count']} 0s and 1s: ")
+                        user_input = input(f"ERROR: Enter between {cmd['min_count']} and {cmd['max_count']} bits: ")
 
                     user_input_match = user_input_pattern.match(user_input)
 

@@ -1,0 +1,43 @@
+# Reverses the user's input and prints the result
+# Example: 00100111 -> 11100100
+
+@main() set_left
+    set_left * !flag(left) get_input
+    get_input * !input(1, 50, "Enter a number:") set_right
+    set_right * !flag(right) exec_reverse
+    exec_reverse * !reverse(left, right) print_text
+    print_text * !print_str("Your string reversed is:") print_result
+    print_result * !print_val(left, right) return
+
+
+@reverse(left, right) goto_right_flag
+# Reverses a number
+# Note that the flag "right" is one past the end of the number
+
+    # Copy the right bit
+    goto_right_flag * !goto(right) check_empty_number
+    check_empty_number * !if(left) return : goto_right
+    goto_right * * < check_left
+    check_left * !if(left) return : set_right
+    set_right * !flag(right) goto_left
+    goto_left 0 !goto(left) set_left_bit_0
+    goto_left 1 !goto(left) set_left_bit_1
+
+    # Paste the right bit and copy the left bit
+    set_left_bit_0 0 0 > check_right_0
+    set_left_bit_0 1 0 > check_right_1
+    set_left_bit_1 0 1 > check_right_0
+    set_left_bit_1 1 1 > check_right_1
+    check_right_0 * !if(right) set_0_then_return : set_left_0
+    check_right_1 * !if(right) set_1_then_return : set_left_1
+    set_left_0 * !flag(left) goto_right_flag_0
+    set_left_1 * !flag(left) goto_right_flag_1
+
+    # Paste the left bit and loop back
+    goto_right_flag_0 * !goto(right) set_right_bit_0
+    goto_right_flag_1 * !goto(right) set_right_bit_1
+    set_right_bit_0 * 0 < check_left
+    set_right_bit_1 * 1 < check_left
+
+    set_0_then_return * 0 * return
+    set_1_then_return * 1 * return
