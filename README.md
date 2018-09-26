@@ -9,13 +9,13 @@ Turing machine programs can be fun to write, however more complex programs can q
 ## Running Functional Turing Machine Programs
 The Functional Turing Machine compiler is written in Python. You will need to have Python 3.6 or higher installed to run the compiler. To compile and run a Function Turing Machine script, run the `functional_turing_machine.py` program. If you do not pass any command line arguments, you will be prompted to input a filename. Filenames must end with the extension `.ftm`.
 
-Alternatively, you can pass the filename as the first command line argument. If you choose this method, you can also specify up to 4 settings. These settings are:
-- `-max_tape`: Sets the maximum size of the tape.
-- `-max_stack`: Sets the maximum recursion/stack depth.
+Alternatively, you can pass the filename as the first command line argument. If you choose this method, you can also specify up to 4 additional arguments. These are:
+- `-max_tape N`: Sets the maximum size of the tape to `N`. The default value is 10000.
+- `-max_stack N`: Sets the maximum recursion/stack depth to `N`. The default value is 1000.
 - `-print_tape`: Causes the program to print the tape after every step.
-- `-print_state`: Causes the program to print the state name after every step. Note that this will cause the tape to be printed regardless of `-print_tape` being passed or not.
+- `-print_state`: Causes the program to print the state name after every step. Note that this will cause the tape to be printed whether or not `-print_tape` is passed.
 
-If you are running on a Mac, I recommend aliasing the `functional_turing_machine.py` file in your `.bash_profile`. Add a line that resembles:
+I would recommend aliasing the `functional_turing_machine.py` file to make it easier to run programs. The alias should resemble:
 
     alias ftm="python3 ~/PATH_TO_FILENAME/functional_turing_machine.py"
 
