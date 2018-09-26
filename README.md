@@ -19,4 +19,42 @@ I would recommend aliasing the `functional_turing_machine.py` file to make it ea
 
     alias ftm="python3 ~/PATH_TO_FILENAME/functional_turing_machine.py"
 
-### This README is not complete. It will be finished shortly.
+
+# Syntax
+
+If you would like to see some examples of working Functional Turing Machine programs, look in the `examples` folder in this repository.
+
+## Basics
+All memory in Functional Turing Machine programs is stored on a "tape" (or an array). There can only be `1`s and `0`s on the tape. The tape can only be accessed at one position on the tape at a time. The tape at the start of a program is initialized to all zeros. The initial position of the tape at the start of execution is at the first element. The position can never extend below the first element of the tape or above the maximum size of the tape (specified by the `-max_tape` command line argument).
+
+Each expression in a Functional Turing Machine program must be on its own line. All expressions must be inside of a function. The `main` function will be called at the start of execution, so that is where your program will start.
+
+All expressions consist of an `initial_state` and an `initial_value`. For an expression to be executed, its `initial_state` must match the current state of the program, and its `initial_value` must match the value at the current position on the tape.
+
+Valid variable names contain letters, digits, and/or underscores (`a-z`, `A-Z`, `0-9`, or `_`). The variable name cannot be composed only of digits (i.e. it must contain at least one letter or underscore).
+
+Flags are special positions on the tape that can be added or moved. You cannot access their address directly, but they can be jumped to, tested for, and passed as parameters to functions. Flag names must be valid variable names.
+
+## Comments
+A comment start with a `#` symbol. All text on the line after this symbol will be ignored by the compiler.
+
+## Function Declarations
+All expressions must appear inside of a user-define function. To declare a function, use the following syntax:
+```
+@function_name (parameters) initial_state
+```
+
+- `function_name`: A valid variable name. It must be unique from all other function names.
+- `parameters`: A list of comma separated flag names.
+- `initial_state`: The state that the tape will be set to when the function is executed.
+
+The end of a function is signified by the start of another function or the end of the file.
+
+## Function Scope
+Functions cannot access flags from another scope. In order to pass flags from another scope, they must be passed as parameters to the function. Flags are passed as values, not as references (i.e. a function cannot modify another function's flags). When a function is called and when a function returns, the current position of the tape will not be changed. Functions cannot directly return information, however they can change the position of the tape and modifiy values on the tape.
+
+
+
+
+
+## This README is not complete. It will be finished shortly.
