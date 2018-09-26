@@ -25,7 +25,7 @@ I would recommend aliasing the `functional_turing_machine.py` file to make it ea
 If you would like to see some examples of working Functional Turing Machine programs, look in the `examples` folder in this repository.
 
 ## Basics
-All memory in Functional Turing Machine programs is stored on a "tape" (or an array). There can only be `1`s and `0`s on the tape. The tape can only be accessed at one position on the tape at a time. The tape at the start of a program is initialized to all zeros. The initial position of the tape at the start of execution is at the first element. The position can never extend below the first element of the tape or above the maximum size of the tape (specified by the `-max_tape` command line argument).
+All memory in Functional Turing Machine programs is stored on a "tape" (or an array). There can only be `1`s and `0`s on the tape. The tape can only be accessed at one position on the tape at a time. The tape at the start of execution is initialized to all `0`s. The initial position of the tape at the start of execution is at the left-most position. The position can never extend to the left of the left-most position or to the right of the maximum size of the tape (specified by the `-max_tape` command line argument).
 
 Each expression in a Functional Turing Machine program must be on its own line. All expressions must be inside of a function. The `main` function will be called at the start of execution, so that is where your program will start.
 
@@ -39,7 +39,7 @@ Flags are special positions on the tape that can be added or moved. You cannot a
 A comment start with a `#` symbol. All text on the line after this symbol will be ignored by the compiler.
 
 ## Function Declarations
-All expressions must appear inside of a user-define function. To declare a function, use the following syntax:
+All expressions must appear inside of a user-defined function. To declare a function, use the following syntax:
 ```
 @function_name (parameters) initial_state
 ```
