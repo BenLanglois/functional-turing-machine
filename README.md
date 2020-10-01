@@ -1,60 +1,137 @@
 # Functional Turing Machine
 
 ## What is a Turing Machine?
-A Turing machine is a mathematical computer that was proposed by Alan Turing in 1936. Turing machines run simple programs, and expressions typically consist of an initial state, an initial value, a move, a final state, and a final value. You can read more [here](https://en.wikipedia.org/wiki/Turing_machine). Several simulations exist online that can run Turing machine programs (a quick Google search will return several results).
 
-## What is the Function Turing Machine Language?
-Turing machine programs can be fun to write, however more complex programs can quickly become very tedious to write. The goal of the Functional Turing Machine language is to combine the simplicity of Turing machines with a few key features from modern programming languages. The most important feature of Functional Turing Machine is "flags", which enables the programmer to keep track of various positions on the tape. This allows programs to jump back and forth between flags, test for flag locations, and pass flags as parameters to functions.
+A Turing Machine is a mathematical computer that was proposed by Alan Turing in 1936. Turing Machines run simple programs, and expressions typically consist of an initial state, an initial value, a move, a final state, and a final value. You can read more [here](https://en.wikipedia.org/wiki/Turing_machine). Several simulations exist online that can run Turing Machine programs.
 
-## Running Functional Turing Machine Programs
-The Functional Turing Machine compiler is written in Python. You will need to have Python 3.6 or higher installed to run the compiler. To compile and run a Function Turing Machine script, run the `functional_turing_machine.py` program. If you do not pass any command line arguments, you will be prompted to input a filename. Filenames must end with the extension `.ftm`.
+## What is the Functional Turing Machine language?
 
-Alternatively, you can pass the filename as the first command line argument. If you choose this method, you can also specify up to 4 additional arguments. These are:
-- `-max_tape N`: Sets the maximum size of the tape to `N`. The default value is 10000.
-- `-max_stack N`: Sets the maximum recursion/stack depth to `N`. The default value is 1000.
-- `-print_tape`: Causes the program to print the tape after every step.
-- `-print_state`: Causes the program to print the state name after every step. Note that this will cause the tape to be printed whether or not `-print_tape` is passed.
+Turing Machine programs can be fun to write, however more complex programs can quickly become very tedious to write. The goal of the Functional Turing Machine language is to combine the simplicity of Turing Machines with a few key features from modern programming languages. The most important feature of Functional Turing Machine is "flags", which enables the programmer to keep track of various positions on the tape. This allows programs to jump back and forth between flags, test for flag locations, and pass flags as parameters to functions.
 
-I would recommend aliasing the `functional_turing_machine.py` file to make it easier to run programs. The alias should resemble:
+## Running Functional Turing Machine programs
 
-    alias ftm="python3 ~/PATH_TO_FILENAME/functional_turing_machine.py"
+The Functional Turing Machine interpreter is written in Python. You will need to have Python 3.6 or higher installed to run the interpreter. To run a Function Turing Machine script, run the `functional_turing_machine.py` program. If you do not pass any command line arguments, you will be prompted to input a filename. Filenames must end with the extension `.ftm`.
 
+Alternatively, you can pass the filename as the first command line argument. If you choose this method, you can also specify up to 4 settings. These settings are:
 
-# Syntax
+- `--max-tape N`: Sets the maximum size of the tape to `N`. The default value is 10000.
+- `--max-stack N`: Sets the maximum recursion/stack depth to `N`. The default value is 1000.
+- `--print-tape`: Causes the program to output a representation of the tape after every step.
+- `--print-state`: Causes the program to print the state name after every step. Implies `--print-tape`.
 
-If you would like to see some examples of working Functional Turing Machine programs, look in the `examples` folder in this repository.
+For ease of access, you may want to create an alias for running `functional_turing_machine.py`.
 
-## Basics
-All memory in Functional Turing Machine programs is stored on a "tape" (or an array). There can only be `1`s and `0`s on the tape. The tape can only be accessed at one position on the tape at a time. The tape at the start of execution is initialized to all `0`s. The initial position of the tape at the start of execution is at the left-most position. The position can never extend to the left of the left-most position or to the right of the maximum size of the tape (specified by the `-max_tape` command line argument).
+    alias ftm="python3 /PATH/TO/FILE/functional_turing_machine.py"
 
-Each expression in a Functional Turing Machine program must be on its own line. All expressions must be inside of a function. The `main` function will be called at the start of execution, so that is where your program will start.
+## Language specification
 
-All expressions consist of an `initial_state` and an `initial_value`. For an expression to be executed, its `initial_state` must match the current state of the program, and its `initial_value` must match the value at the current position on the tape.
+### Basics
 
-Valid variable names contain letters, digits, and/or underscores (`a-z`, `A-Z`, `0-9`, or `_`). The variable name cannot be composed only of digits (i.e. it must contain at least one letter or underscore).
+#### The tape
 
-Flags are special positions on the tape that can be added or moved. You cannot access their address directly, but they can be jumped to, tested for, and passed as parameters to functions. Flag names must be valid variable names.
+All memory in Functional Turing Machine programs is stored on a "tape". There can only be `1`s and `0`s on the tape. The tape can only be accessed at one position on the tape at a time. The tape at the start of execution is initialized to all `0`s. The initial position of the tape at the start of execution is at the left-most position. The position can never extend to the left of the left-most position or to the right of the maximum size of the tape (specified by the `--max_tape` command line argument).
 
-## Comments
-A comment start with a `#` symbol. All text on the line after this symbol will be ignored by the compiler.
+#### Comments
 
-## Function Declarations
-All expressions must appear inside of a user-defined function. To declare a function, use the following syntax:
-```
-@function_name (parameters) initial_state
-```
+The `#` symbol denotes the start of a single-line comment. All characters after the symbol are ignored.
 
-- `function_name`: A valid variable name. It must be unique from all other function names.
-- `parameters`: A list of comma separated flag names.
-- `initial_state`: The state that the tape will be set to when the function is executed.
+#### Variable names
 
-The end of a function is signified by the start of another function or the end of the file.
+Valid variable names use the characters `a-z`, `A-Z`, `0-9`, and `_`. There must be at least one non-digit character somewhere in the name. This applies to function names, flag names, and state names.
 
-## Function Scope
-Functions cannot access flags from another scope. In order to pass flags from another scope, they must be passed as parameters to the function. Flags are passed as values, not as references (i.e. a function cannot modify another function's flags). When a function is called and when a function returns, the current position of the tape will not be changed. Functions cannot directly return information, however they can change the position of the tape and modifiy values on the tape.
+#### Whitespace
 
+Each instruction must be separated by at least one newline character. Instructions may be preceded or followed by any number of spaces.
 
+#### Scope
 
+Functions have global scope and can be called from anywhere. Flags and states have local scope and can only be accessed by instructions in the same function definition.
 
+### Syntax
 
-## This README is not complete. It will be finished shortly.
+#### Instructions
+
+Each line in a program can be split into four categories:
+
+- Blank line
+- Comment
+- Function definition
+- Instruction
+
+Blank lines and lines with only a comment do not change the execution of the program. Function definitions (described below) always begin with an `@` symbol preceded by zero or more spaces. All other lines are instructions. There must be at least one function definition before the first instruction in a program. All instructions follow the basic syntax:
+
+    INITIAL_STATE INITIAL_VALUE ... NEXT_STATE
+
+where:
+
+- `INITIAL_STATE` is the state that the Turing Machine must be in in order to execute the instruction. It can be any valid variable name.
+- `INITIAL_VALUE` describes the value that must be at the current position on the tape in order to execute the instruction. It must be one of the following symbols:
+  - `0` will only run the instruction if the value at the current position on the tape is 0.
+  - `1` will only run the instruction if the value at the current position on the tape is 1.
+  - `*` will match any value at the current position on the tape.
+- `NEXT_STATE` is the state that the Turing Machine will be in after the instruction has been executed. It can be any valid variable name or `*` to match `INITIAL_STATE`.
+- `...` is syntax specific to each instruction
+
+In order for an instruction to run, the Turing Machine must be in the state `INITIAL_STATE` AND the value that must be at the current position on the tape must match `INITIAL_VALUE`. No two instructions in the same function may have the `INITIAL_STATE` and `INITIAL_VALUE`.
+
+#### Function definitions
+
+Function definitions have the following syntax:
+
+    @FUNCTION_NAME ( PARAM_1, PARAM_2, ... ) INITIAL_STATE
+
+where:
+
+- `FUNCTION_NAME` is the name of the function being defined.
+- `PARAM_1`, `PARAM_2`, ... are the comma-separated parameters for the function. Zero or more parameters may be declared. These parameters are flags defined in the function's scope.
+- `INITIAL_STATE` is the state that the function will begin execution in.
+
+**Program execution always begins at the function named `main`.** There must be a definition for the `main` function that takes no parameters in every program.
+
+User-defined function names must not match any of the built-in function names, which are:
+
+- `flag`
+- `goto`
+- `if`
+- `input`
+- `print_str`
+- `print_val`
+
+Instructions following the function declaration belong to the function being defined. The function ends when another function is declared or the end of the file is reached.
+
+Function names must be unique across the entire program. Flag and parameter names must be unique throughout the function they are defined in.
+
+**Example:** Define a function named `foo` which takes two parameters `a` and `b` and begins execution in state `start`.
+
+    @foo (a, b) start
+
+#### Calling user-defined functions
+
+Calling user-defined functions has the following syntax:
+
+    INITIAL_STATE INITIAL_VALUE !FUNCTION_NAME ( PARAM_1, PARAM_2, ... ) NEXT_STATE
+
+where:
+
+- `FUNCTION_NAME` is the name of the function that is being called.
+- `PARAM_1`, `PARAM_2`, ... are the comma-separated parameters for the function. The number of parameters passed to the function must match the number of parameters declared in the function definition. These parameters must be flags defined in the local scope.
+
+The state is set to `NEXT_STATE` after the function is finished execution; it does not determine which state the function begins execution in.
+
+Parameters are passed as values, not as references. This means that if the callee function modifies the value of its parameters, the caller function's flags will not me modified.
+
+**Example:** Call a function named `foo` which takes two parameters `a` and `b`. `foo` should be called if the state is `call_foo` and the value at the current position on the tape is 1. After `foo` is called, the next state should be `done`.
+
+    call_foo 1 !foo(a, b) done
+
+#### Move, set, and fill
+
+TODO
+
+#### If statement
+
+TODO
+
+### Built-in functions
+
+TODO

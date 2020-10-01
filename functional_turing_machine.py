@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 import re
 
@@ -126,35 +128,35 @@ if __name__ == "__main__":
         while i < len(sys.argv):
             arg = sys.argv[i].lower()
 
-            if arg == "-max_tape":
+            if arg == "--max-tape":
                 # Sets the maximum tape size
                 if "max_tape_size" in settings.keys():
-                    raise ValueError("Argument -max_tape specified more than once.")
+                    raise ValueError("Argument --max-tape specified more than once.")
                 settings["max_tape_size"] = int(sys.argv[i+1])
                 if settings["max_tape_size"] < 1:
                     raise ValueError("Maximum tape size must be at least 1.")
                 i += 2
 
-            elif arg == "-max_stack":
+            elif arg == "--max-stack":
                 # Sets the maximum stack size
                 if "max_stack_size" in settings.keys():
-                    raise ValueError("Argument -max_stack specified more than once.")
+                    raise ValueError("Argument --max-stack specified more than once.")
                 settings["max_stack_size"] = int(sys.argv[i+1])
                 if settings["max_stack_size"] < 1:
                     raise ValueError("Maximum stack size must be at least 1.")
                 i += 2
 
-            elif arg == "-print_tape":
+            elif arg == "--print-tape":
                 # Print the tape after every step
                 if "print_tape" in settings.keys():
-                    raise ValueError("Argument -print_tape specified more than once.")
+                    raise ValueError("Argument --print-tape specified more than once.")
                 settings["print_tape"] = True
                 i += 1
 
-            elif arg == "-print_state":
+            elif arg == "--print-state":
                 # Print the state after every step
                 if "print_state" in settings.keys():
-                    raise ValueError("Argument -print_state specified more than once.")
+                    raise ValueError("Argument --print-state specified more than once.")
                 settings["print_state"] = True
                 i += 1
 
@@ -183,6 +185,7 @@ if __name__ == "__main__":
         script = input_file.readlines()
 
     # Initialize variables
+    BUILTIN_FUNCTIONS = {"flag", "goto", "if", "input", "print_str", "print_val"}
     functions = {}
     curr_function = None
 
@@ -212,7 +215,7 @@ if __name__ == "__main__":
             # Get expression information
             name = new_func_match.group("name")
 
-            if name in ("flag", "goto", "if", "input", "print_str"):
+            if name in BUILTIN_FUNCTIONS:
                 # User tried to re-define builtin function
                 raise ValueError(f'Unable to re-define builtin function "!{name}" on line {line_num}.')
 

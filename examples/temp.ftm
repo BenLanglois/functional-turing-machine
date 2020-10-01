@@ -1,0 +1,24 @@
+# Temp file, don't commit
+
+@main() set_first
+    set_first * !flag(first) get_input
+    get_input * !input(1, 10, "input:") set_last
+    set_last * !flag(last) move_right
+    move_right * * >10 invert
+    invert * !invert(first, last) print_str
+    print_str * !print_str("Inverted input:") print_val
+    print_val * !print_val(first, last) finnito
+
+
+@invert(left, right) save_pos
+    save_pos * !flag(orig_pos) goto_left
+    goto_left * !goto(left) call_recursive
+    call_recursive * !invert_recursive(right) restore_pos
+    restore_pos * !goto(orig_pos) return
+
+
+@invert_recursive(end) check_eq
+    check_eq * !if(end) finish : flip
+    flip 0 1 > recurse
+    flip 1 0 > recurse
+    recurse * !invert_recursive(end) return
